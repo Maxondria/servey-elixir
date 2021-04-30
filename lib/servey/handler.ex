@@ -1,68 +1,80 @@
 defmodule Servey.Handler do
+  @moduledoc """
+  Handles HTTP requests.
+  """
+
+  alias Servey.Conv
+
+  # Instead of importing everything, we import only those we need (the numbers indicate function arity)
+  import Servey.Plugins, only: [rewrite_path: 1, log: 1, emojify: 1, track: 1]
+  import Servey.Parser, only: [parse: 1]
+  import Servey.FileHandler, only: [file_reader: 2]
+  # import SomeModule, only: :functions
+  # import SomeModule, only: :macros
+
+  # defmacro return(value) do
+  #   quote do
+  #     unquote(value)
+  #   end
+  # end
+
+  @doc """
+  Transforms the request into a respone.
+  """
   def handle(request) do
     request
     |> parse
-    |> log
+    |> rewrite_path()
+    |> log()
     |> route
+    |> emojify()
+    |> track()
     |> format_response
   end
 
-  # We represent single line functions like this too.
-  def log(conv), do: IO.inspect(conv)
-
-  def parse(request) do
-    [method, path, _] =
-      request
-      |> String.split("\n")
-      |> List.first()
-      |> String.split(" ")
-
-    %{method: method, path: path, resp_body: "", status: nil}
-  end
-
-  def route(%{method: method, path: path, resp_body: _resp_body} = conv) do
-    route(conv, method, path)
-  end
-
-  def route(conv, "GET", "/wildthings") do
+  def route(%Conv{method: "GET", path: "/wildthings"} = conv) do
     %{conv | resp_body: "Bears, Lions, Tigers", status: 200}
   end
 
-  def route(conv, "GET", "/bears") do
+  def route(%Conv{method: "GET", path: "/bears"} = conv) do
     %{conv | resp_body: "Teddy, Smokey, Paddington", status: 200}
   end
 
-  def route(conv, "GET", "/bears/" <> id) do
+  def route(%Conv{method: "GET", path: "/bears/new"} = conv) do
+    file_reader("form", %Conv{} = conv)
+  end
+
+  def route(%Conv{method: "GET", path: "/bears/" <> id} = conv) do
     %{conv | resp_body: "Bear #{id}", status: 200}
   end
 
-  def route(conv, "DELETE", "/bears/" <> id) do
+  def route(%Conv{method: "DELETE", path: "/bears/" <> id} = conv) do
     %{conv | resp_body: "Bear #{id} has been deleted", status: 200}
   end
 
-  def route(conv, _method, path) do
+  def route(%Conv{method: "GET", path: "/about"} = conv) do
+    file_reader("about", %Conv{} = conv)
+  end
+
+  def route(%Conv{method: "GET", path: "/pages/" <> file} = conv) do
+    file_reader(file, %Conv{} = conv)
+  end
+
+  def route(%Conv{path: path} = conv) do
     %{conv | resp_body: "No #{path} here!", status: 404}
   end
 
-  def format_response(%{method: _method, path: _path, resp_body: resp_body, status: status}) do
+  @doc """
+  Formats the response into an expected HTTP response string
+  """
+  def format_response(%Conv{resp_body: resp_body} = conv) do
     """
-    HTTP/1.1 #{status} #{status_reason(status)}
+    HTTP/1.1 #{Conv.full_status(conv)}
     Content-Type: text/html
-    Content-Length: #{String.length(resp_body)}
+    Content-Length: #{byte_size(resp_body)}
 
     #{resp_body}
     """
-  end
-
-  defp status_reason(code) do
-    %{
-      200 => "OK",
-      201 => "Created",
-      401 => "Unauthorized",
-      403 => "Forbidden",
-      404 => "Not Found",
-      500 => "Internal Server Error"
-    }[code]
   end
 end
 
@@ -112,6 +124,39 @@ IO.puts(response)
 
 request = """
 GET /bigfoot HTTP/1.1
+Host: example.com
+User-Agent: ExampleBrowser/1.0
+Accept: */*
+
+"""
+
+response = Servey.Handler.handle(request)
+IO.puts(response)
+
+request = """
+GET /wildlife HTTP/1.1
+Host: example.com
+User-Agent: ExampleBrowser/1.0
+Accept: */*
+
+"""
+
+response = Servey.Handler.handle(request)
+IO.puts(response)
+
+request = """
+GET /about HTTP/1.1
+Host: example.com
+User-Agent: ExampleBrowser/1.0
+Accept: */*
+
+"""
+
+response = Servey.Handler.handle(request)
+IO.puts(response)
+
+request = """
+GET /bears/new HTTP/1.1
 Host: example.com
 User-Agent: ExampleBrowser/1.0
 Accept: */*
