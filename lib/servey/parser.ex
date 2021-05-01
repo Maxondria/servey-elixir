@@ -16,7 +16,7 @@ defmodule Servey.Parser do
     [method, path, _] = String.split(request_line, " ")
 
     params = parse_params(params_string)
-    headers = parse_headers(header_lines, %{})
+    headers = parse_headers(header_lines)
 
     %Conv{method: method, path: path, params: params, headers: headers}
   end
@@ -27,11 +27,18 @@ defmodule Servey.Parser do
     |> URI.decode_query()
   end
 
-  def parse_headers([head | tail], headers) do
-    [key, value] = String.split(head, ": ")
-    headers = Map.put(headers, key, value)
-    parse_headers(tail, headers)
-  end
+  # def parse_headers([head | tail], headers \\ %{}) do
+  #   [key, value] = String.split(head, ": ")
+  #   headers = Map.put(headers, key, value)
+  #   parse_headers(tail, headers)
+  # end
 
-  def parse_headers([], headers), do: headers
+  # def parse_headers([], headers), do: headers
+
+  def parse_headers(header_lines) do
+    Enum.reduce(header_lines, %{}, fn header_line, headers ->
+      [key, value] = String.split(header_line, ": ")
+      Map.put(headers, key, value)
+    end)
+  end
 end
