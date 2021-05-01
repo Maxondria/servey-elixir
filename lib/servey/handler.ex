@@ -3,7 +3,20 @@ defmodule Servey.Handler do
   Handles HTTP requests.
   """
 
+  #  Alias the module so it can be called as Bar instead of Foo.Bar
+  # alias Foo.Bar, as: Bar
+
+  # Require the module in order to use its macros
+  # require Foo
+
+  # Import functions from Foo so they can be called without the `Foo.` prefix
+  # import Foo
+
+  # Invokes the custom code defined in Foo as an extension point
+  # use Foo
+
   alias Servey.Conv
+  alias Servey.BearController
 
   # Instead of importing everything, we import only those we need (the numbers indicate function arity)
   import Servey.Plugins, only: [rewrite_path: 1, log: 1, emojify: 1, track: 1]
@@ -37,27 +50,33 @@ defmodule Servey.Handler do
   end
 
   def route(%Conv{method: "GET", path: "/bears"} = conv) do
-    %{conv | resp_body: "Teddy, Smokey, Paddington", status: 200}
+    BearController.index(conv)
   end
 
   def route(%Conv{method: "GET", path: "/bears/new"} = conv) do
-    file_reader("form", %Conv{} = conv)
+    BearController.new(conv)
   end
 
   def route(%Conv{method: "GET", path: "/bears/" <> id} = conv) do
-    %{conv | resp_body: "Bear #{id}", status: 200}
+    params = Map.put(conv.params, "id", id)
+    BearController.show(conv, params)
   end
 
   def route(%Conv{method: "DELETE", path: "/bears/" <> id} = conv) do
-    %{conv | resp_body: "Bear #{id} has been deleted", status: 200}
+    params = Map.put(conv.params, "id", id)
+    BearController.delete(conv, params)
+  end
+
+  def route(%Conv{method: "POST", path: "/bears", params: params} = conv) do
+    BearController.create(conv, params)
   end
 
   def route(%Conv{method: "GET", path: "/about"} = conv) do
-    file_reader("about", %Conv{} = conv)
+    file_reader("about", conv)
   end
 
   def route(%Conv{method: "GET", path: "/pages/" <> file} = conv) do
-    file_reader(file, %Conv{} = conv)
+    file_reader(file, conv)
   end
 
   def route(%Conv{path: path} = conv) do
@@ -161,6 +180,20 @@ Host: example.com
 User-Agent: ExampleBrowser/1.0
 Accept: */*
 
+"""
+
+response = Servey.Handler.handle(request)
+IO.puts(response)
+
+request = """
+POST /bears HTTP/1.1
+Host: example.com
+User-Agent: ExampleBrowser/1.0
+Accept: */*
+Content-Type: application/x-www-form-urlencoded
+Content-Length: 21
+
+name=Baloo&type=Brown
 """
 
 response = Servey.Handler.handle(request)
