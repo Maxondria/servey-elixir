@@ -4,24 +4,30 @@ defmodule Servey.BearController do
   alias Servey.Wildthings
   import Servey.FileHandler, only: [file_reader: 2]
 
-  defp bear_item(bear) do
-    "<li>#{bear.name} - #{bear.type}</li>"
+  # This defines an absolute path to where we keep our files
+  @templates_path Path.expand("templates", File.cwd!())
+
+  defp render(conv, template, bindings) do
+    content =
+      @templates_path
+      |> Path.join(template)
+      |> EEx.eval_file(bindings)
+
+    %{conv | resp_body: content, status: 200}
   end
 
   def index(%Conv{} = conv) do
-    items =
+    bears =
       Wildthings.list_bears()
-      |> Enum.filter(&Bear.is_grizzly/1)
       |> Enum.sort(&Bear.order_asc_by_name/2)
-      |> Enum.map(&bear_item/1)
-      |> Enum.join()
 
-    %{conv | resp_body: "<ul>#{items}</ul>", status: 200}
+    render(conv, "index.eex", bears: bears)
   end
 
   def show(%Conv{} = conv, %{"id" => id}) do
     bear = Wildthings.get_bear(id)
-    %{conv | resp_body: "<h1>Bear #{bear.id}:  #{bear.name}</h1>", status: 200}
+
+    render(conv, "show.eex", bear: bear)
   end
 
   def new(%Conv{} = conv) do
