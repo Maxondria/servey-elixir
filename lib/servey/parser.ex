@@ -9,9 +9,9 @@ defmodule Servey.Parser do
   Parses the HTTP string to a clean map that routes can then pick up and work with
   """
   def parse(request) do
-    [top, params_string] = String.split(request, "\n\n")
+    [top, params_string] = String.split(request, "\r\n\r\n")
 
-    [request_line | header_lines] = String.split(top, "\n")
+    [request_line | header_lines] = String.split(top, "\r\n")
 
     [method, path, _] = String.split(request_line, " ")
 
@@ -21,6 +21,18 @@ defmodule Servey.Parser do
     %Conv{method: method, path: path, params: params, headers: headers}
   end
 
+  @doc """
+  Parses the given param string of the form `key1=value1&key2=value2`
+  into a map with corresponding keys and values
+
+  ## Examples
+
+      iex> params_string = "name=Baloo&type=Brown"
+      iex> Servey.Parser.parse_params("application/x-www-form-urlencoded", params_string)
+      %{"name" => "Baloo", "type" => "Brown"}
+      iex> Servey.Parser.parse_params("multipart/form-data", params_string)
+      %{}
+  """
   def parse_params("application/x-www-form-urlencoded", param_string) do
     param_string
     |> String.trim()

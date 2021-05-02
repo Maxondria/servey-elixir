@@ -19,7 +19,7 @@ defmodule Servey.Handler do
   alias Servey.BearController
 
   # Instead of importing everything, we import only those we need (the numbers indicate function arity)
-  import Servey.Plugins, only: [rewrite_path: 1, log: 1, emojify: 1, track: 1]
+  import Servey.Plugins, only: [rewrite_path: 1, log: 1, track: 1]
   import Servey.Parser, only: [parse: 1]
   import Servey.FileHandler, only: [file_reader: 2]
   # import SomeModule, only: :functions
@@ -40,7 +40,6 @@ defmodule Servey.Handler do
     |> rewrite_path()
     |> log()
     |> route
-    |> emojify()
     |> track()
     |> format_response
   end
@@ -88,113 +87,110 @@ defmodule Servey.Handler do
   """
   def format_response(%Conv{resp_body: resp_body} = conv) do
     """
-    HTTP/1.1 #{Conv.full_status(conv)}
-    Content-Type: text/html
-    Content-Length: #{byte_size(resp_body)}
-
+    HTTP/1.1 #{Conv.full_status(conv)}\r
+    Content-Type: text/html\r
+    Content-Length: #{byte_size(resp_body)}\r
+    \r
     #{resp_body}
     """
   end
 end
 
-request = """
-GET /wildthings HTTP/1.1
-Host: example.com
-User-Agent: ExampleBrowser/1.0
-Accept: */*
+# request = """
+# GET /wildthings HTTP/1.1
+# Host: example.com
+# User-Agent: ExampleBrowser/1.0
+# Accept: */*
 
-"""
+# """
 
-response = Servey.Handler.handle(request)
-IO.puts(response)
+# request = """
+# GET /bears HTTP/1.1
+# Host: example.com
+# User-Agent: ExampleBrowser/1.0
+# Accept: */*
 
-request = """
-GET /bears HTTP/1.1
-Host: example.com
-User-Agent: ExampleBrowser/1.0
-Accept: */*
+# """
 
-"""
+# response = Servey.Handler.handle(request)
+# IO.puts(response)
 
-response = Servey.Handler.handle(request)
-IO.puts(response)
+# request = """
+# GET /bears/1 HTTP/1.1
+# Host: example.com
+# User-Agent: ExampleBrowser/1.0
+# Accept: */*
 
-request = """
-GET /bears/1 HTTP/1.1
-Host: example.com
-User-Agent: ExampleBrowser/1.0
-Accept: */*
+# """
 
-"""
+# response = Servey.Handler.handle(request)
+# IO.puts(response)
 
-response = Servey.Handler.handle(request)
-IO.puts(response)
+# request = """
+# DELETE /bears/1 HTTP/1.1
+# Host: example.com
+# User-Agent: ExampleBrowser/1.0
+# Accept: */*
 
-request = """
-DELETE /bears/1 HTTP/1.1
-Host: example.com
-User-Agent: ExampleBrowser/1.0
-Accept: */*
+# """
 
-"""
+# response = Servey.Handler.handle(request)
+# IO.puts(response)
 
-response = Servey.Handler.handle(request)
-IO.puts(response)
+# request = """
+# GET /bigfoot HTTP/1.1
+# Host: example.com
+# User-Agent: ExampleBrowser/1.0
+# Accept: */*
 
-request = """
-GET /bigfoot HTTP/1.1
-Host: example.com
-User-Agent: ExampleBrowser/1.0
-Accept: */*
+# """
 
-"""
+# response = Servey.Handler.handle(request)
+# IO.puts(response)
 
-response = Servey.Handler.handle(request)
-IO.puts(response)
+# request = """
+# GET /wildlife HTTP/1.1
+# Host: example.com
+# User-Agent: ExampleBrowser/1.0
+# Accept: */*
 
-request = """
-GET /wildlife HTTP/1.1
-Host: example.com
-User-Agent: ExampleBrowser/1.0
-Accept: */*
+# """
 
-"""
+# response = Servey.Handler.handle(request)
+# IO.puts(response)
 
-response = Servey.Handler.handle(request)
-IO.puts(response)
+# request = """
+# GET /about HTTP/1.1
+# Host: example.com
+# User-Agent: ExampleBrowser/1.0
+# Accept: */*
 
-request = """
-GET /about HTTP/1.1
-Host: example.com
-User-Agent: ExampleBrowser/1.0
-Accept: */*
+# """
 
-"""
+# response = Servey.Handler.handle(request)
+# IO.puts(response)
 
-response = Servey.Handler.handle(request)
-IO.puts(response)
+# request = """
+# GET /bears/new HTTP/1.1
+# Host: example.com
+# User-Agent: ExampleBrowser/1.0
+# Accept: */*
 
-request = """
-GET /bears/new HTTP/1.1
-Host: example.com
-User-Agent: ExampleBrowser/1.0
-Accept: */*
+# """
 
-"""
+# response = Servey.Handler.handle(request)
+# IO.puts(response)
 
-response = Servey.Handler.handle(request)
-IO.puts(response)
+# request = """
+# POST /bears HTTP/1.1
+# Host: example.com
+# User-Agent: ExampleBrowser/1.0
+# Accept: */*
+# Content-Type: application/x-www-form-urlencoded
+# Content-Length: 21
 
-request = """
-POST /bears HTTP/1.1
-Host: example.com
-User-Agent: ExampleBrowser/1.0
-Accept: */*
-Content-Type: application/x-www-form-urlencoded
-Content-Length: 21
+# name=Baloo&type=Brown
+# """
 
-name=Baloo&type=Brown
-"""
-
-response = Servey.Handler.handle(request)
-IO.puts(response)
+# response = Servey.Handler.handle(request)
+# IO.puts(response)

@@ -9,22 +9,22 @@ defmodule Servey.Plugins do
 
   alias Servey.Conv
 
-  @doc """
-  Adds emojies to requests that were successful
-  """
-  def emojify(%Conv{status: 200, resp_body: resp_body} = conv) do
-    emojies = String.duplicate("🎉", 5)
-    body = emojies <> "\n" <> resp_body <> "\n" <> emojies
-    %{conv | resp_body: body}
-  end
+  # def emojify(%Conv{status: 200, resp_body: resp_body} = conv) do
+  #   emojies = String.duplicate("🎉", 5)
+  #   body = emojies <> "\n" <> resp_body <> "\n" <> emojies
+  #   %{conv | resp_body: body}
+  # end
 
-  def emojify(%Conv{} = conv), do: conv
+  # def emojify(%Conv{} = conv), do: conv
 
   @doc """
   Logs 404 requests
   """
   def track(%Conv{status: 404, path: path} = conv) do
-    Logger.info("Warning: #{path} is on the loose!")
+    if Mix.env() != :test do
+      Logger.info("Warning: #{path} is on the loose!")
+    end
+
     conv
   end
 
@@ -42,5 +42,11 @@ defmodule Servey.Plugins do
   @doc """
   Logs HTTP requests post parsing
   """
-  def log(%Conv{} = conv), do: IO.inspect(conv)
+  def log(%Conv{} = conv) do
+    if Mix.env() == :dev do
+      IO.inspect(conv)
+    end
+
+    conv
+  end
 end
