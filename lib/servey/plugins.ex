@@ -49,4 +49,9 @@ defmodule Servey.Plugins do
 
     conv
   end
+
+  def put_content_length(%Conv{resp_headers: resp_headers, resp_body: resp_body} = conv) do
+    headers = Map.put(resp_headers, "Content-Length", byte_size(resp_body))
+    %{conv | resp_headers: headers}
+  end
 end

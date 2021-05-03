@@ -1,19 +1,31 @@
 defmodule Servey.Wildthings do
   alias Servey.Bear
 
+  @db_path Path.expand("db", File.cwd!())
+
   def list_bears do
-    [
-      %Bear{id: 1, name: "Teddy", type: "Brown", hibernating: true},
-      %Bear{id: 2, name: "Smokey", type: "Black"},
-      %Bear{id: 3, name: "Paddington", type: "Brown"},
-      %Bear{id: 4, name: "Scarface", type: "Grizzly", hibernating: true},
-      %Bear{id: 5, name: "Snow", type: "Polar"},
-      %Bear{id: 6, name: "Brutus", type: "Grizzly"},
-      %Bear{id: 7, name: "Rosie", type: "Black", hibernating: true},
-      %Bear{id: 8, name: "Roscoe", type: "Panda"},
-      %Bear{id: 9, name: "Iceman", type: "Polar", hibernating: true},
-      %Bear{id: 10, name: "Kenai", type: "Grizzly"}
-    ]
+    @db_path
+    |> Path.join("bears.json")
+    |> File.read()
+    |> handle_file
+    |> Poison.Parser.parse!(%{})
+    |> Map.get("bears")
+    |> bear_maps_to_bear_structs
+  end
+
+  defp handle_file({:error, reason}) do
+    IO.inspect("Error reading file:  #{reason}")
+    "[]"
+  end
+
+  defp handle_file({:ok, contents}), do: contents
+
+  defp bear_maps_to_bear_structs(bears) do
+    bears
+    |> Enum.map(fn bear ->
+      for {key, val} <- bear, into: %{}, do: {String.to_atom(key), val}
+    end)
+    |> Enum.map(fn bear -> struct(Bear, bear) end)
   end
 
   def get_bear(id) when is_integer(id) do
