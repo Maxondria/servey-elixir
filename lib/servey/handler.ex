@@ -24,6 +24,7 @@ defmodule Servey.Handler do
   import Servey.Plugins, only: [rewrite_path: 1, log: 1, track: 1, put_content_length: 1]
   import Servey.Parser, only: [parse: 1]
   import Servey.FileHandler, only: [file_reader: 2]
+  import Servey.View, only: [render: 3]
   # import SomeModule, only: :functions
   # import SomeModule, only: :macros
 
@@ -49,6 +50,38 @@ defmodule Servey.Handler do
 
   def route(%Conv{method: "GET", path: "/sensors"} = conv) do
     task = Task.async(fn -> Tracker.get_location("bigfoot") end)
+    # task = Task.async(Tracker, :get_location, ["bigfoot"])
+
+    # Task.await by default waits for 5000(5s) before timing out.
+    # If there is need to wait for the task even more, we can
+    # add a different argument as timeout. Task.await(task, 7000).
+    # or Task.await(task, :infinity)
+
+    # Another alternative to 'await' is 'yield', we can keep checking on the task,
+    #
+    #     iex> task = Task.async(fn -> :timer.sleep(8000); "Done!" end)
+    #     iex> Task.yield(task, 5000)
+    #     nil
+    #     iex> Task.yield(task, 5000)
+    #     {:ok, "Done!"}
+
+    # In this case, calling yield for the first time, it waits for 5 seconds if the task hasn't finished,
+    # 'nil' is returned.
+    # Else, it will return the result in a tuple. {:ok, "Done!"}
+
+    # Consider the example below, this can be looked at as a manual implementation of await.
+    # But allows for cleaner handling of errors from timeouts.
+
+    #   case Task.yield(task, 5000)
+    #       {:ok, result} ->
+    #         result
+    #       nil ->
+    #         Logger.warn "Timed out!"
+    #         Task.shutdown(task)
+    #   end
+
+    # In the example above, if a message doesn't arrive within the 5 second cut-off then we shut down the task by calling Task.shutdown.
+    # If a message arrives while shutting down the task, then Task.shutdown returns {:ok, result}. Otherwise it returns nil.
 
     snapshots =
       ["cam-1", "cam-2", "cam-3"]
@@ -57,7 +90,7 @@ defmodule Servey.Handler do
 
     where_is_bigfoot = Task.await(task)
 
-    %{conv | status: 200, resp_body: inspect({snapshots, where_is_bigfoot})}
+    render(conv, "sensors.eex", snapshots: snapshots, location: where_is_bigfoot)
   end
 
   def route(%Conv{method: "GET", path: "/kaboom"} = _conv) do

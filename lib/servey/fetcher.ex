@@ -15,7 +15,12 @@ defmodule Servey.Fetcher do
       # The ^ sign returns the value of the variable but doesn't bind it to a new value,
       # so pid will retain it's value unchanged
       # look at it as readonly just to be sure it matches
-      {^pid, :result, value} -> value
+      {^pid, :result, value} ->
+        value
+        # Raise an error is the response doesn't arrive in 2 seconds
+    after
+      2000 ->
+        raise "Timed out!"
     end
   end
 end

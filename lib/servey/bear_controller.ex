@@ -2,19 +2,9 @@ defmodule Servey.BearController do
   alias Servey.Conv
   alias Servey.Bear
   alias Servey.Wildthings
+
+  import Servey.View, only: [render: 3]
   import Servey.FileHandler, only: [file_reader: 2]
-
-  # This defines an absolute path to where we keep our files
-  @templates_path Path.expand("templates", File.cwd!())
-
-  defp render(conv, template, bindings) do
-    content =
-      @templates_path
-      |> Path.join(template)
-      |> EEx.eval_file(bindings)
-
-    %{conv | resp_body: content, status: 200}
-  end
 
   def index(%Conv{} = conv) do
     bears =
