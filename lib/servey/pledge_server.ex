@@ -70,8 +70,9 @@ defmodule Servey.PledgeServer do
   end
 
   # callback to handle messages that don't need a reply
-  def handle_cast({:set_cache_size, size}, %State{} = state) do
-    {:noreply, %{state | cache_size: size}}
+  def handle_cast({:set_cache_size, size}, %State{pledges: pledges} = state) do
+    resized_cache = Enum.take(pledges, size)
+    {:noreply, %{state | cache_size: size, pledges: resized_cache}}
   end
 
   def handle_cast(:clear_cache, %State{} = state) do
