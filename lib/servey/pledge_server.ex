@@ -7,10 +7,23 @@ defmodule Servey.PledgeServer do
     defstruct cache_size: 3, pledges: []
   end
 
+  # Override the child_spec() coming from GenServer, so that the supervisor starts it differently
+  # from the default behavior
+
+  # def child_spec(_arg) do
+  #   # Literally got this from running: Servey.PledgeServer.child_spec([])
+  #   # However, now we can override these all the way we wanna
+  #   %{
+  #     id: Servey.PledgeServer,
+  #     restart: :permanent,
+  #     start: {Servey.PledgeServer, :start_link, [[]]}
+  #   }
+  # end
+
   # Client Interface functions
-  def start() do
+  def start_link(_arg) do
     IO.puts("Starting the pledge server...")
-    GenServer.start(__MODULE__, %State{}, name: @process_id)
+    GenServer.start_link(__MODULE__, %State{}, name: @process_id)
   end
 
   def create_pledge(name, amount) do
