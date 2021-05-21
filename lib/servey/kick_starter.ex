@@ -35,6 +35,7 @@ defmodule Servey.KickStarter do
 
   defp start_server do
     IO.puts("Starting the HTTP server...")
+    port = Application.get_env(:servey, :port, 4000)
 
     # Spawns the given function, links it to the current process, and returns its PID.
     # The current process in this context is the kick_starter_pid since it is one that starts 'start' function
@@ -43,7 +44,7 @@ defmodule Servey.KickStarter do
     # The reason we link them is because we want to listen to any exit messages
     # to the child process [server process], and trap it so we can use it in the
     # handle_info function above to restart the server
-    server_pid = spawn_link(Servey.HttpServer, :start, [4000])
+    server_pid = spawn_link(Servey.HttpServer, :start, [port])
 
     # We simply register this pid globally on the module. This now gives us access to the current server_pid
     # anywhere we want.
